@@ -2,7 +2,7 @@
 # turn off display for 5 minutes every 25 minutes
 
 # User Configs
-source $HOME/code/pomodoro/etc/pomodoro.conf
+source $HOME/code/i3-pomo/etc/pomodoro.conf
 
 #system
 SELF="$(basename "$0")"
