@@ -2,13 +2,14 @@
 # turn off display for 5 minutes every 25 minutes
 
 # User Configs
-source $HOME/code/i3-pomo/etc/pomodoro.conf
+REPO_PATH=$HOME/code/i3-pomo
+source $REPO_PATH/etc/*.conf
 
 #system
 SELF="$(basename "$0")"
 PID_OF_SELF=$(pgrep -f "$SELF")
 function verbose {
-	if [ $VERBOSE = 'true' ]; then
+	if [[ $VERBOSE = 'true' ]]; then
 		echo "$@"
 	fi
 }
