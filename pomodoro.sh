@@ -6,8 +6,8 @@ REPO_PATH=$HOME/code/i3-pomo
 source $REPO_PATH/etc/*.conf
 
 #system
-SELF="$(basename "$0")"
-PID_OF_SELF=$(pgrep -f "$SELF")
+THISFILE="$(basename "$0")"
+PID_OF_THISFILE=$(pgrep -f "$THISFILE")
 function verbose {
 	if [[ $VERBOSE = 'true' ]]; then
 		echo "$@"
@@ -33,15 +33,14 @@ function next_second {
 
 # UI
 function start_studytime {
-	cmus-remote -U
-	xrandr --output HDMI-A-0 --brightness 1
+	user_code_start_studytime
 	echo $STUDYTIME_SECONDS
 	exit 0
 }
 
 function start_breaktime {
-	cmus-remote -p
-	xrandr --output HDMI-A-0 --brightness .05
+	#set by user in $REPO_PATH/etc/*.conf
+	user_code_start_breaktime
 	echo $BREAKTIME_SECONDS
 	exit 0
 }
@@ -55,11 +54,16 @@ function snooze {
 	COUNT=$((${COUNT}+${TIME}))
 }
 
+function killwarningbar {
+	killall i3-nagbar 2> /dev/null
+}
+
 function warningbar {
-	i3-nagbar -m 'Break WILL begin in 1 minute' \
+	MESSAGE="$(echo 'Break WILL begin in' $BREAKTIME_WARNING_SECONDS 'seconds')"
+	i3-nagbar -m "$MESSAGE" \
 		-t warning \
-		-B "EMERGENCY STOP" "kill $PID_OF_SELF && killall i3-nagbar 2> /dev/null" \
-		-B "WAAIIITTTT..... I need 5 more minutes" "pkill -USR1 -f $SELF"
+		-B "EMERGENCY STOP" "kill $PID_OF_THISFILE && killall i3-nagbar 2> /dev/null" \
+		-B "WAAIIITTTT..... I need 5 more minutes" "pkill -USR1 -f $THISFILE"
 }
 
 # Runtime
@@ -74,7 +78,11 @@ while true; do
 		if [[ $COUNT -eq $BREAKTIME_WARNING_SECONDS ]]; then
 			warningbar &
 		fi
+		if [[ $COUNT -eq "$((${BREAKTIME_WARNING_SECONDS}-${AUTOCLOSE_BREAKTIME_WARNINGBAR_AFTER_N_SECONDS}))" ]]; then
+			killwarningbar 
+		fi
 		if [[ $COUNT -eq '0' ]]; then
+			killwarningbar 
 			MODE='break'
 			COUNT=$(start_breaktime)
 		fi
