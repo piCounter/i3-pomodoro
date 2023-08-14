@@ -33,14 +33,14 @@ function next_second {
 
 # UI
 function start_studytime {
-	user_code_start_studytime
+	`user_code_start_studytime`
 	echo $STUDYTIME_SECONDS
 	exit 0
 }
 
 function start_breaktime {
 	#set by user in $REPO_PATH/etc/*.conf
-	user_code_start_breaktime
+	`user_code_start_breaktime`
 	echo $BREAKTIME_SECONDS
 	exit 0
 }
@@ -81,14 +81,14 @@ while true; do
 		if [[ $COUNT -eq "$((${BREAKTIME_WARNING_SECONDS}-${AUTOCLOSE_BREAKTIME_WARNINGBAR_AFTER_N_SECONDS}))" ]]; then
 			killwarningbar 
 		fi
-		if [[ $COUNT -eq '0' ]]; then
+		if [[ $COUNT -le '0' ]]; then
 			killwarningbar 
 			MODE='break'
 			COUNT=$(start_breaktime)
 		fi
 	fi
 	if [ $MODE = 'break' ]; then
-		if [[ $COUNT -eq '0' ]]; then
+		if [[ $COUNT -le '0' ]]; then
 			MODE='study'
 			COUNT=$(start_studytime)
 		fi
