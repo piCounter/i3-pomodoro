@@ -3,7 +3,15 @@
 
 # User Configs
 REPO_PATH=$HOME/code/i3-pomo
-source $REPO_PATH/etc/*.conf
+source $REPO_PATH/etc/i3-pomo/*.conf
+
+function show_help {
+	echo 'Usage: pomodoro.sh [OPTION]...'
+	echo -e "\t-b Start in break mode (~5 minutes before work)"
+	echo -e "\t-w Start in work mode (~about 25 minutes of work before break)"
+    echo -e "\t-h|? show this help message and exit"
+    exit 0
+}
 
 #system
 THISFILE="$(basename "$0")"
@@ -33,14 +41,17 @@ function next_second {
 
 # UI
 function start_studytime {
-	`user_code_start_studytime`
+	for i in $(ls $REPO_PATH/src/i3-pomo/start-study/*.sh); do
+		source ${i} > /dev/null
+	done
 	echo $STUDYTIME_SECONDS
 	exit 0
 }
 
 function start_breaktime {
-	#set by user in $REPO_PATH/etc/*.conf
-	`user_code_start_breaktime`
+	for i in $(ls $REPO_PATH/src/i3-pomo/start-break/*.sh); do
+		source ${i} > /dev/null
+	done
 	echo $BREAKTIME_SECONDS
 	exit 0
 }
@@ -66,16 +77,43 @@ function warningbar {
 		-B "WAAIIITTTT..... I need 5 more minutes" "pkill -USR1 -f $THISFILE"
 }
 
+# Show help if no arguments are given
+if [ $# -eq 0 ]; then
+	show_help
+	exit 0
+fi
+
+# Accept option flags
+while getopts "h?bwv" opt; do
+	case "$opt" in
+		h|\?)
+			show_help
+			exit 0
+			;;
+		b)
+			MODE='break'
+			COUNT="$(start_breaktime)"
+			echo 'Starting in Break mode'
+			;;
+		v)
+			VERBOSE='true'
+			;;
+		w)
+			MODE='study'
+			COUNT="$(start_studytime)"
+			echo 'Starting in Work mode'
+			;;
+	esac
+done
+
 # Runtime
-MODE='study'
-COUNT="$(start_studytime)"
 while true; do
 	verbose $MODE $COUNT
 	if [[ $COUNT = '' ]]; then
 		exit 1;
 	fi
-	if [ $MODE = 'study' ]; then
-		if [[ $COUNT -eq $BREAKTIME_WARNING_SECONDS ]]; then
+	if [[ $MODE = 'study' ]]; then
+		if [[ "$COUNT" -eq "$BREAKTIME_WARNING_SECONDS" ]]; then
 			warningbar &
 		fi
 		if [[ $COUNT -eq "$((${BREAKTIME_WARNING_SECONDS}-${AUTOCLOSE_BREAKTIME_WARNINGBAR_AFTER_N_SECONDS}))" ]]; then
@@ -87,7 +125,7 @@ while true; do
 			COUNT=$(start_breaktime)
 		fi
 	fi
-	if [ $MODE = 'break' ]; then
+	if [[ $MODE = 'break' ]]; then
 		if [[ $COUNT -le '0' ]]; then
 			MODE='study'
 			COUNT=$(start_studytime)
