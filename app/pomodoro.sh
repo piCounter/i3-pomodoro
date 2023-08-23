@@ -8,6 +8,7 @@ source $REPO_PATH/etc/i3-pomo/*.conf
 function show_help {
 	echo 'Usage: pomodoro.sh [OPTION]...'
 	echo -e "\t-b Start in break mode (~5 minutes before work)"
+	echo -e "\t-v Verbose output"
 	echo -e "\t-w Start in work mode (~about 25 minutes of work before break)"
     echo -e "\t-h|? show this help message and exit"
     exit 0
